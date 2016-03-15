@@ -20,38 +20,38 @@ public class Utils : MonoBehaviour
 		} else if (b0.size == Vector3.zero && b1.size == Vector3.zero) {
 			return (b0);
 		}
-
+		
 		// else combine them
 		b0.Encapsulate (b1.min);
 		b0.Encapsulate (b1.max);
 		return (b0);
 	}
-
-
+	
+	
 	public static Bounds CombineBoundsOfChildren(GameObject go) 
 	{
 		Bounds b = new Bounds (Vector3.zero, Vector3.zero);
 		if (go.renderer != null) {
 			b = BoundsUnion(b, go.renderer.bounds);
 		}
-
+		
 		if (go.collider != null) {
 			b = BoundsUnion(b, go.collider.bounds);
 		}
-
+		
 		foreach (Transform t in go.transform) {
-				b = BoundsUnion(b, CombineBoundsOfChildren(t.gameObject));
+			b = BoundsUnion(b, CombineBoundsOfChildren(t.gameObject));
 		}
-
+		
 		return (b);
-
+		
 	}
-
-
-// PRIVATE VARIABLE
+	
+	
+	// PRIVATE VARIABLE
 	static private Bounds _camBounds;
-
-//PROPERTY
+	
+	//PROPERTY
 	static public Bounds camBounds {
 		get {
 			if (_camBounds.size == Vector3.zero) {
@@ -67,24 +67,24 @@ public class Utils : MonoBehaviour
 		// use the main camera as default if none passed in.
 		if (cam == null)
 			cam = Camera.main;
-			
+		
 		// assuming camera is orthographic and does not have any rotation applied to it	
 		// get top left and bottomRight
 		
-			Vector3 topLeft = new Vector3(0,0,0);
-			Vector3 bottomRight = new Vector3(Screen.width, Screen.height, 0f);
-			
-			Vector3 boundTLN = cam.ScreenToWorldPoint(topLeft);
-			Vector3	boundBRF = cam.ScreenToWorldPoint(bottomRight);	
-			
-			boundTLN.z = cam.nearClipPlane;
-			boundBRF.z = cam.farClipPlane;
-			
-			Vector3 center = (boundTLN + boundBRF) /2f;
-			
-			_camBounds = new Bounds(center, Vector3.zero);
-			_camBounds.Encapsulate(boundTLN);
-			_camBounds.Encapsulate(boundBRF);
+		Vector3 topLeft = new Vector3(0,0,0);
+		Vector3 bottomRight = new Vector3(Screen.width, Screen.height, 0f);
+		
+		Vector3 boundTLN = cam.ScreenToWorldPoint(topLeft);
+		Vector3	boundBRF = cam.ScreenToWorldPoint(bottomRight);	
+		
+		boundTLN.z = cam.nearClipPlane;
+		boundBRF.z = cam.farClipPlane;
+		
+		Vector3 center = (boundTLN + boundBRF) /2f;
+		
+		_camBounds = new Bounds(center, Vector3.zero);
+		_camBounds.Encapsulate(boundTLN);
+		_camBounds.Encapsulate(boundBRF);
 	} // end setCameraBounds
 	
 	// checks to see whether the bounds bnd are within the camBounds
@@ -93,8 +93,7 @@ public class Utils : MonoBehaviour
 	}
 	
 	// Checks to see if bounds lilb are within Bounds bigB
-	public static Vector3 BoundsInBoundsCheck (Bounds bigB, Bounds lilB, 
-	                                           BoundsTest test = BoundsTest.onScreen) {
+	public static Vector3 BoundsInBoundsCheck (Bounds bigB, Bounds lilB, BoundsTest test = BoundsTest.onScreen) {
 		// behavior needs to be different depending on the test selected
 		
 		Vector3 pos = lilB.center;		// use center for measurement
@@ -102,7 +101,7 @@ public class Utils : MonoBehaviour
 		
 		switch (test) {
 			// what is offset to move center of lilB back inside bigB
-			case BoundsTest.center:
+		case BoundsTest.center:
 			// trivial case - we are already inside
 			if (bigB.Contains(pos)) {
 				return (Vector3.zero);   //no need to move
@@ -126,12 +125,12 @@ public class Utils : MonoBehaviour
 			} else if (pos.z < bigB.min.z) {
 				off.z = pos.z - bigB.min.z;
 			}
-				
+			
 			return (off);
-
+			
 			//-------------------------
 			// what is the offset to keep ALL of lilB inside bigB
-			case BoundsTest.onScreen:
+		case BoundsTest.onScreen:
 			// trivial case - we are already inside
 			if (bigB.Contains(lilB.max) && bigB.Contains(lilB.min)) {
 				return (Vector3.zero);   //no need to move
@@ -159,7 +158,7 @@ public class Utils : MonoBehaviour
 			
 			//-------------------------
 			// what is the offset to keep ALL of lilB outside of bigB					
-			case BoundsTest.offScreen:
+		case BoundsTest.offScreen:
 			bool cMin = bigB.Contains(lilB.min);
 			bool cMax = bigB.Contains(lilB.max);
 			
@@ -185,27 +184,46 @@ public class Utils : MonoBehaviour
 			} else if (lilB.max.z < bigB.min.z) {
 				off.z = lilB.max.z - bigB.min.z;
 			}
-		
+			
 			return (off);
 		} // end switch BoundsTest
 		
 		return (Vector3.zero);  // if we get here something went wrong
-	
+		
 	} // end BoundsInBoundsCheck
+	
+	//=======================Transformformformform functions=====================================
+	
+	//Until it either find a parent with a tag!= "Untagged" or no parent.
 	public static GameObject FindTaggedParent(GameObject go) {
+		//If this gameObject has a tag.
 		if (go.tag != "Untagged") {
-			return (go);
+			//Then return this gameObject.
+			return(go);
 		}
+		//If there is no parent of this Transform.
 		if (go.transform.parent == null) {
-			return( null );
+			//We've reached the top of the hierarchy with no interesting tag
+			//So return null.
+			return(null);
 		}
-		return( FindTaggedParent( go.transform.parent.gameObject ) );
+		//Otherwise, recursively climb up the tree.
+		return(FindTaggedParent (go.transform.parent.gameObject));
 	}
+	//This version of the function handles things if a Transform is passed in.
 	public static GameObject FindTaggedParent(Transform t) {
-		return (FindTaggedParent (t.gameObject));
+		return(FindTaggedParent (t.gameObject));
 	}
 	
+	static public Material[] GetAllMaterials( GameObject go ) {
+		List<Material> mats = new List<Material>();
+		if (go.renderer != null) {
+			mats.Add(go.renderer.material);
+		}
+		foreach( Transform t in go.transform ) {
+			mats.AddRange( GetAllMaterials( t.gameObject ) );
+		}
+		return( mats.ToArray() );
+	}
 	
 }// End of Util Class
-
-
